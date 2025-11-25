@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -13,6 +12,8 @@ import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AboutPage } from './pages/AboutPage';
+import { PropertyAnalyticsPage } from './pages/PropertyAnalyticsPage';
+import { PortfolioAnalyticsPage } from './pages/PortfolioAnalyticsPage';
 
 export function App() {
   return (
@@ -40,6 +41,16 @@ export function App() {
             <Route path="/admin" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminDashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/analytics" element={
+              <ProtectedRoute allowedRoles={['landlord', 'agent', 'admin']}>
+                <PortfolioAnalyticsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/properties/:id/analytics" element={
+              <ProtectedRoute allowedRoles={['landlord', 'agent', 'admin']}>
+                <PropertyAnalyticsPage />
               </ProtectedRoute>
             } />
             <Route path="/about" element={<AboutPage />} />

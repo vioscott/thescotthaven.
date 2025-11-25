@@ -9,7 +9,7 @@ export function AboutPage() {
             <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16 sm:py-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
-                        <h1 className="text-4xl sm:text-5xl font-bold mb-4">About TheScottHaven</h1>
+                        <h1 className="text-4xl sm:text-5xl font-bold mb-4">About Hovallo</h1>
                         <p className="text-xl text-blue-100 max-w-3xl mx-auto">
                             Connecting property seekers with landlords across Nigeria
                         </p>
@@ -23,7 +23,7 @@ export function AboutPage() {
                     <div className="max-w-3xl mx-auto text-center">
                         <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
                         <p className="text-lg text-gray-600 leading-relaxed">
-                            TheScottHaven was created to simplify the real estate experience in Nigeria.
+                            Hovallo was created to simplify the real estate experience in Nigeria.
                             We believe finding a home or listing a property should be straightforward,
                             transparent, and accessible to everyone. Our platform connects landlords,
                             agents, and property seekers directly, eliminating unnecessary middlemen

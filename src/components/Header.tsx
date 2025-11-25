@@ -29,7 +29,7 @@ export function Header() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 text-xl font-semibold text-gray-900">
           <HomeIcon className="w-6 h-6 text-blue-600" />
-          <span className="hidden sm:inline">TheScottHaven</span>
+          <span className="hidden sm:inline">Hovallo</span>
         </Link>
 
         {/* Desktop Navigation */}

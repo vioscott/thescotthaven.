@@ -1,6 +1,6 @@
 # Supabase Database Migration Guide
 
-This guide will help you set up your Supabase database for the TheScottHaven application.
+This guide will help you set up your Supabase database for the Hovallo application.
 
 ## Prerequisites
 

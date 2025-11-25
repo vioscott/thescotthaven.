@@ -11,7 +11,7 @@ export function Footer() {
                     <div className="space-y-4">
                         <div className="flex items-center space-x-2">
                             <HomeIcon className="h-8 w-8 text-blue-500" />
-                            <span className="text-xl font-bold text-white">TheScottHaven</span>
+                            <span className="text-xl font-bold text-white">Hovallo</span>
                         </div>
                         <p className="text-sm text-gray-400">
                             Your trusted partner in finding the perfect property. We make real estate simple, transparent, and efficient.
@@ -76,7 +76,7 @@ export function Footer() {
                 </div>
 
                 <div className="border-t border-gray-800 mt-12 pt-8 text-center text-sm text-gray-500">
-                    <p>&copy; {new Date().getFullYear()} TheScottHaven. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} Hovallo. All rights reserved.</p>
                 </div>
             </div>
         </footer>

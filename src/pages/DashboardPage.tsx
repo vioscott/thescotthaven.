@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusIcon, EditIcon, TrashIcon, EyeIcon } from 'lucide-react';
+import { PlusIcon, EditIcon, TrashIcon, EyeIcon, BarChart3 } from 'lucide-react';
 import { storage, StoredProperty } from '../utils/storage';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -40,13 +40,22 @@ export function DashboardPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between mb-8">
                     <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
-                    <Link
-                        to="/create-listing"
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                    >
-                        <PlusIcon className="w-5 h-5 mr-2" />
-                        New Listing
-                    </Link>
+                    <div className="flex gap-3">
+                        <Link
+                            to="/dashboard/analytics"
+                            className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                        >
+                            <BarChart3 className="w-5 h-5 mr-2" />
+                            Portfolio Analytics
+                        </Link>
+                        <Link
+                            to="/create-listing"
+                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                        >
+                            <PlusIcon className="w-5 h-5 mr-2" />
+                            New Listing
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -114,6 +123,13 @@ export function DashboardPage() {
                                                         title="View"
                                                     >
                                                         <EyeIcon className="w-4 h-4" />
+                                                    </Link>
+                                                    <Link
+                                                        to={`/dashboard/properties/${property.id}/analytics`}
+                                                        className="text-gray-400 hover:text-purple-600"
+                                                        title="Analytics"
+                                                    >
+                                                        <BarChart3 className="w-4 h-4" />
                                                     </Link>
                                                     <button
                                                         className="text-gray-400 hover:text-blue-600"

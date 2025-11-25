@@ -1,6 +1,6 @@
-# TheScottHaven - Future Features Roadmap
+# Hovallo - Future Features Roadmap
 
-This document outlines potential features for future iterations of TheScottHaven. These are nice-to-have features that are not required for the initial launch.
+This document outlines potential features for future iterations of Hovallo. These are nice-to-have features that are not required for the initial launch.
 
 ## Phase 2: Enhanced User Experience
 
