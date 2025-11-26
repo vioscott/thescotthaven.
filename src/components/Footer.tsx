@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FacebookIcon, TwitterIcon, InstagramIcon, LinkedinIcon, MailIcon, PhoneIcon, MapPinIcon, HomeIcon } from 'lucide-react';
+import { FacebookIcon, TwitterIcon, InstagramIcon, LinkedinIcon, MailIcon, PhoneIcon, MapPinIcon } from 'lucide-react';
+import logoBlue from '../imgs/logo-blue.png';
 
 export function Footer() {
     return (
@@ -10,7 +11,7 @@ export function Footer() {
                     {/* Brand Section */}
                     <div className="space-y-4">
                         <div className="flex items-center space-x-2">
-                            <HomeIcon className="h-8 w-8 text-blue-500" />
+                            <img src={logoBlue} alt="Hovallo" className="h-10 w-auto" />
                             <span className="text-xl font-bold text-white">Hovallo</span>
                         </div>
                         <p className="text-sm text-gray-400">

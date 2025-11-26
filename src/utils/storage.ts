@@ -40,6 +40,8 @@ export interface Inquiry {
   createdAt: string;
 }
 
+
+
 export const storage = {
   // User methods (mostly handled by AuthContext now, but keeping for compat if needed)
   getUserByEmail: async (email: string) => {

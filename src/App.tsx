@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
+import { SearchPage } from './pages/SearchPage';
 import { ListingDetailPage } from './pages/ListingDetailPage';
 import { CreateListingPage } from './pages/CreateListingPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -16,6 +17,7 @@ import { PropertyAnalyticsPage } from './pages/PropertyAnalyticsPage';
 import { PortfolioAnalyticsPage } from './pages/PortfolioAnalyticsPage';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { EditListingPage } from './pages/EditListingPage';
+import { MortgagePage } from './pages/MortgagePage';
 
 export function App() {
   return (
@@ -25,11 +27,16 @@ export function App() {
           <Header />
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/properties" element={<HomePage />} /> {/* Reusing Home for now as it has search */}
+            <Route path="/properties" element={<SearchPage />} />
             <Route path="/properties/:id" element={<ListingDetailPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/post" element={
+              <ProtectedRoute allowedRoles={['landlord', 'agent', 'admin']}>
+                <CreateListingPage />
+              </ProtectedRoute>
+            } />
             <Route path="/create-listing" element={
               <ProtectedRoute allowedRoles={['landlord', 'agent', 'admin']}>
                 <CreateListingPage />
@@ -56,7 +63,8 @@ export function App() {
               </ProtectedRoute>
             } />
             <Route path="/about" element={<AboutPage />} />
-            <Route path="/search" element={<HomePage />} />
+            <Route path="/mortgage" element={<MortgagePage />} />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/favorites" element={
               <ProtectedRoute allowedRoles={['tenant', 'landlord', 'agent', 'admin']}>
                 <FavoritesPage />

@@ -1,19 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HomeIcon, MessageCircleIcon, SearchIcon } from 'lucide-react';
 import { PropertyCard } from '../components/PropertyCard';
-import { AdvancedFilters } from '../components/AdvancedFilters';
 import { storage, StoredProperty } from '../utils/storage';
+import heroImage from '../imgs/Luxury-Real-Estate-Brands.jpg';
 
 export function HomePage() {
+  const navigate = useNavigate();
   const [properties, setProperties] = useState<StoredProperty[]>([]);
-  const [filteredProperties, setFilteredProperties] = useState<StoredProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [propertyType, setPropertyType] = useState<string>('all');
-  const [priceRange, setPriceRange] = useState<string>('all');
-  const [bedrooms, setBedrooms] = useState<string>('all');
-  const [bathrooms, setBathrooms] = useState<string>('all');
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -21,81 +17,56 @@ export function HomePage() {
       const allProperties = await storage.getProperties();
       const published = allProperties.filter(p => p.status === 'published');
       setProperties(published);
-      setFilteredProperties(published);
       setLoading(false);
     };
     fetchProperties();
   }, []);
 
-  useEffect(() => {
-    let filtered = [...properties];
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(p =>
-        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.address.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/properties?q=${encodeURIComponent(searchTerm)}`);
+    } else {
+      navigate('/properties');
     }
-
-    // Type filter
-    if (propertyType !== 'all') {
-      filtered = filtered.filter(p => p.type === propertyType);
-    }
-
-    // Price filter
-    if (priceRange !== 'all') {
-      const [min, max] = priceRange.split('-').map(Number);
-      filtered = filtered.filter(p => {
-        if (max) return p.price >= min && p.price <= max;
-        return p.price >= min;
-      });
-    }
-
-    // Bedrooms filter
-    if (bedrooms !== 'all') {
-      const minBedrooms = Number(bedrooms);
-      filtered = filtered.filter(p => p.bedrooms >= minBedrooms);
-    }
-
-    // Bathrooms filter
-    if (bathrooms !== 'all') {
-      const minBathrooms = Number(bathrooms);
-      filtered = filtered.filter(p => p.bathrooms >= minBathrooms);
-    }
-
-    setFilteredProperties(filtered);
-  }, [searchTerm, propertyType, priceRange, bedrooms, bathrooms, properties]);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12 sm:py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8 sm:mb-10">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4">
-              Find Your Perfect Property
+      <div
+        className="relative bg-cover bg-center text-white py-20 sm:py-24 md:py-32"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      >
+        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 tracking-tight">
+              Find Your Perfect Home
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-blue-100 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto font-light">
               Discover amazing properties across Nigeria
             </p>
           </div>
 
-          {/* Search and Filters */}
-          <div className="max-w-4xl mx-auto">
-            <AdvancedFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              propertyType={propertyType}
-              onTypeChange={setPropertyType}
-              priceRange={priceRange}
-              onPriceRangeChange={setPriceRange}
-              bedrooms={bedrooms}
-              onBedroomsChange={setBedrooms}
-              bathrooms={bathrooms}
-              onBathroomsChange={setBathrooms}
-            />
+          {/* Simple Search Bar */}
+          <div className="max-w-3xl mx-auto">
+            <form onSubmit={handleSearch} className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Enter an address, zip code or neighborhood"
+                className="w-full px-6 py-4 pr-16 rounded-lg text-gray-900 placeholder-gray-500 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-2 bottom-2 bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition-colors"
+                aria-label="Search"
+              >
+                <SearchIcon className="w-6 h-6" />
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -173,7 +144,7 @@ export function HomePage() {
                 </div>
               ))}
             </div>
-          ) : filteredProperties.length === 0 ? (
+          ) : properties.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
               <p className="text-gray-600 mb-4">No properties listed yet.</p>
               <Link
@@ -185,7 +156,7 @@ export function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProperties.slice(0, 6).map((property) => (
+              {properties.slice(0, 6).map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))}
             </div>
