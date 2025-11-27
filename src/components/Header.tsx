@@ -155,7 +155,7 @@ export function Header() {
           {/* Right Side: User Menu / Sign In */}
           <div className="hidden md:flex items-center gap-6">
             <Link to="/dashboard" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">Manage Rentals</Link>
-            <Link to="/about" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">Help</Link>
+            <Link to="/faq" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">Help</Link>
 
             {isAuthenticated ? (
               <div className="relative">
@@ -241,7 +241,7 @@ export function Header() {
               <div className="border-t border-gray-200 my-2 pt-2"></div>
 
               <Link to="/dashboard" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Manage Rentals</Link>
-              <Link to="/about" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Help</Link>
+              <Link to="/faq" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Help</Link>
 
               <div className="border-t border-gray-200 my-2 pt-2"></div>
 

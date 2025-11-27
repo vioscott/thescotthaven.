@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { GoogleOAuthButton } from '../components/GoogleOAuthButton';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { UserPlusIcon, CheckCircleIcon, XCircleIcon } from 'lucide-react';
+import { UserPlusIcon, CheckCircleIcon, XCircleIcon, BriefcaseIcon } from 'lucide-react';
+
 
 export function SignupPage() {
   const navigate = useNavigate();
@@ -70,7 +72,12 @@ export function SignupPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
+                <p className="font-medium">{error}</p>
+                {(error.includes('taking too long') || error.includes('timeout')) && (
+                  <p className="mt-2 text-xs text-red-600">
+                    Tip: This often happens when the database is waking up. Please wait a moment and try again.
+                  </p>
+                )}
               </div>
             )}
 
@@ -167,12 +174,26 @@ export function SignupPage() {
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
+          <div className="mt-6 flex flex-col items-center">
+            <GoogleOAuthButton label="Sign up with Google" className="w-full max-w-sm" />
+          </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200 text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
-            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-              Sign in
-            </Link>
+          <div className="mt-6 pt-6 border-t border-gray-200 text-center text-sm space-y-2">
+            <div>
+              <Link
+                to="/signup/professional"
+                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
+              >
+                <BriefcaseIcon className="w-4 h-4" />
+                I am a professional
+              </Link>
+            </div>
+            <div>
+              <span className="text-gray-600">Already have an account? </span>
+              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+                Sign in
+              </Link>
+            </div>
           </div>
         </div>
       </div>

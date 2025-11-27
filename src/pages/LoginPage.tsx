@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { GoogleOAuthButton } from '../components/GoogleOAuthButton';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+
 import { LogInIcon } from 'lucide-react';
 export function LoginPage() {
   const navigate = useNavigate();
@@ -47,9 +49,16 @@ export function LoginPage() {
 
       <div className="bg-white rounded-xl border border-gray-200 p-8">
         <form onSubmit={handleSubmit} className="space-y-5">
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-            {error}
-          </div>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <p className="font-medium">{error}</p>
+              {(error.includes('taking too long') || error.includes('timeout')) && (
+                <p className="mt-2 text-xs text-red-600">
+                  Tip: This often happens when the database is waking up. Please wait a moment and try again.
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -75,6 +84,10 @@ export function LoginPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+        <div className="mt-6 flex flex-col items-center space-y-4">
+          <GoogleOAuthButton label="Sign in with Google" className="w-full max-w-sm" />
+
+        </div>
 
         <div className="mt-6 pt-6 border-t border-gray-200 text-center text-sm">
           <span className="text-gray-600">Don't have an account? </span>

@@ -1,8 +1,7 @@
-import React, { useEffect, useState, createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../utils/supabase';
-// User type is defined below
 
-// Define a type that matches our app's needs, extending or wrapping Supabase user
+// User type definition
 export interface User {
   id: string;
   email: string;
@@ -13,19 +12,12 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
-  signup: (email: string, password: string, name: string, role?: 'tenant' | 'landlord' | 'agent') => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
-  logout: () => void;
-  resetPassword: (email: string) => Promise<{
-    success: boolean;
-    error?: string;
-  }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (email: string, password: string, name: string, role?: 'tenant' | 'landlord' | 'agent') => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  fetchUserProfile: (userId: string, email: string) => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
@@ -33,34 +25,61 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({
-  children
-}: {
-  children: React.ReactNode;
-}) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch or create user profile (including OAuth users)
+  const fetchUserProfile = async (userId: string, email: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error && (error as any).code === 'PGRST116') {
+        // No profile – create a default one using OAuth info
+        const { error: insertError } = await supabase.from('users').insert([
+          {
+            id: userId,
+            email,
+            name: email.split('@')[0],
+            role: 'tenant',
+            created_at: new Date().toISOString(),
+          },
+        ]);
+        if (insertError) console.error('Error creating OAuth profile:', insertError);
+        setUser({ id: userId, email, name: email.split('@')[0], role: 'tenant', isAdmin: false });
+      } else {
+        setUser({
+          id: userId,
+          email,
+          name: data?.name || email.split('@')[0],
+          role: data?.role || 'tenant',
+          isAdmin: data?.role === 'admin',
+        });
+      }
+    } catch (e) {
+      console.error('Error in fetchUserProfile:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial session check and auth state listener
   useEffect(() => {
-    // Check active session
     const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          await fetchUserProfile(session.user.id, session.user.email!);
-        } else {
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error checking session:', error);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await fetchUserProfile(session.user.id, session.user.email!);
+      } else {
         setLoading(false);
       }
     };
-
     checkSession();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: string, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         await fetchUserProfile(session.user.id, session.user.email!);
       } else {
@@ -68,56 +87,22 @@ export function AuthProvider({
         setLoading(false);
       }
     });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
-
-  const fetchUserProfile = async (userId: string, email: string) => {
-    try {
-      // Fetch user role/details from public.users table
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        // Fallback if user record doesn't exist yet (e.g. just signed up)
-        // In a real app, we might want to wait or retry
-      }
-
-      setUser({
-        id: userId,
-        email: email,
-        name: data?.name || email.split('@')[0],
-        role: data?.role || 'tenant',
-        isAdmin: data?.role === 'admin' // Simple check for now
-      });
-    } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const login = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
+      if (data.user) {
+        await fetchUserProfile(data.user.id, data.user.email!);
+      }
+
       return { success: true };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || 'Failed to login'
-      };
+    } catch (e: any) {
+      console.error('Login error:', e);
+      return { success: false, error: e.message || 'Login failed' };
     }
   };
 
@@ -126,43 +111,18 @@ export function AuthProvider({
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            name,
-            role,
-          }
-        }
+        options: { data: { name, role } },
       });
-
       if (error) throw error;
-
-      if (data.user) {
-        // Create user profile in public.users table
-        // Note: This might be handled by a Supabase Trigger ideally, but we'll do it client-side for MVP if no trigger exists
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: data.user.id,
-              email: email,
-              name: name,
-              role: role,
-              created_at: new Date().toISOString()
-            }
-          ]);
-
-        if (profileError) {
-          console.error('Error creating user profile:', profileError);
-          // Continue anyway as auth account is created
-        }
+      if (data?.user) {
+        const { error: profileError } = await supabase.from('users').insert([
+          { id: data.user.id, email, name, role, created_at: new Date().toISOString() },
+        ]);
+        if (profileError) console.error('Error creating user profile:', profileError);
       }
-
       return { success: true };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || 'Failed to sign up'
-      };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Signup failed' };
     }
   };
 
@@ -176,32 +136,43 @@ export function AuthProvider({
       const { error } = await supabase.auth.resetPasswordForEmail(email);
       if (error) throw error;
       return { success: true };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message
-      };
+    } catch (e: any) {
+      return { success: false, error: e.message };
     }
   };
 
-  return <AuthContext.Provider value={{
-    user,
-    login,
-    signup,
-    logout,
-    resetPassword,
-    isAuthenticated: !!user,
-    isAdmin: user?.isAdmin || false,
-    loading
-  }}>
-    {children}
-  </AuthContext.Provider>;
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      if (error) throw error;
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Google sign‑in failed' };
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        signup,
+        logout,
+        resetPassword,
+        signInWithGoogle,
+        fetchUserProfile,
+        isAuthenticated: !!user,
+        isAdmin: user?.isAdmin ?? false,
+        loading,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 }
