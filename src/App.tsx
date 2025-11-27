@@ -16,6 +16,9 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AboutPage } from './pages/AboutPage';
 import { FAQPage } from './pages/FAQPage';
+import { AgentFinderPage } from './pages/AgentFinderPage';
+import { ProfileSettings } from './pages/ProfileSettings';
+import { MessagesPage } from './pages/MessagesPage';
 import { PropertyAnalyticsPage } from './pages/PropertyAnalyticsPage';
 import { PortfolioAnalyticsPage } from './pages/PortfolioAnalyticsPage';
 import { FavoritesPage } from './pages/FavoritesPage';
@@ -71,6 +74,7 @@ export function App() {
             } />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/faq" element={<FAQPage />} />
+            <Route path="/agents" element={<AgentFinderPage />} />
             <Route path="/mortgage" element={<MortgagePage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/favorites" element={
@@ -84,6 +88,16 @@ export function App() {
               </ProtectedRoute>
             } />
             <Route path="/test-supabase" element={<SupabaseTestPage />} />
+            <Route path="/profile" element={
+              <ProtectedRoute allowedRoles={['tenant', 'landlord', 'agent', 'admin']}>
+                <ProfileSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/messages" element={
+              <ProtectedRoute allowedRoles={['tenant', 'landlord', 'agent', 'admin']}>
+                <MessagesPage />
+              </ProtectedRoute>
+            } />
           </Routes>
           <Footer />
         </div>

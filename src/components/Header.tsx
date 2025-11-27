@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { UserIcon, LogOutIcon, LayoutDashboardIcon, ShieldIcon, MenuIcon, XIcon, Heart } from 'lucide-react';
+import { UserIcon, LogOutIcon, LayoutDashboardIcon, ShieldIcon, MenuIcon, XIcon, Heart, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import logoBlue from '../imgs/logo-blue.png';
 import logoWhite from '../imgs/logo-white.png';
@@ -82,7 +82,7 @@ export function Header() {
       title: 'Resources',
       items: [
         { label: 'List for sale by owner', href: '/post' },
-        { label: 'Find a seller\'s agent', href: '/about' },
+        { label: 'Find a seller\'s agent', href: '/agents' },
       ]
     }
   ];
@@ -110,7 +110,7 @@ export function Header() {
     {
       title: 'Find Pros',
       items: [
-        { label: 'Real estate agents', href: '/about' },
+        { label: 'Real estate agents', href: '/agents' },
         { label: 'Property managers', href: '/about' },
         { label: 'Home inspectors', href: '/about' },
       ]
@@ -149,7 +149,7 @@ export function Header() {
             <NavigationMenu title="Rent" sections={rentSections} active={location.search.includes('for_rent')} />
             <NavigationMenu title="Sell" sections={sellSections} active={location.pathname === '/post'} />
             <NavigationMenu title="Home Loans" sections={mortgageSections} active={location.pathname === '/mortgage'} />
-            <NavigationMenu title="Agent Finder" sections={agentSections} active={location.pathname === '/about'} />
+            <NavigationMenu title="Agent Finder" sections={agentSections} active={location.pathname === '/agents'} />
           </nav>
 
           {/* Right Side: User Menu / Sign In */}
@@ -158,46 +158,56 @@ export function Header() {
             <Link to="/faq" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">Help</Link>
 
             {isAuthenticated ? (
-              <div className="relative">
-                <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                    {user?.name.charAt(0).toUpperCase()}
-                  </div>
-                </button>
-
-                {showUserMenu && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
-                      <div className="px-4 py-2 border-b border-gray-200">
-                        <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                        <p className="text-xs text-gray-500">{user?.email}</p>
-                      </div>
-
-                      <Link to="/dashboard" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                        <LayoutDashboardIcon className="w-4 h-4" />
-                        My Dashboard
-                      </Link>
-
-                      <Link to="/favorites" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                        <Heart className="w-4 h-4" />
-                        My Favorites
-                      </Link>
-
-                      {isAdmin && (
-                        <Link to="/admin" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                          <ShieldIcon className="w-4 h-4" />
-                          Admin Panel
-                        </Link>
+              <div className="flex items-center gap-4">
+                <Link to="/messages" className="p-2 text-gray-600 hover:text-blue-600 transition-colors relative" title="Messages">
+                  <MessageSquare className="w-5 h-5" />
+                </Link>
+                <div className="relative">
+                  <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold overflow-hidden">
+                      {user?.avatar_url ? (
+                        <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
+                      ) : (
+                        user?.name.charAt(0).toUpperCase()
                       )}
-
-                      <button onClick={handleLogout} className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-gray-200 mt-2">
-                        <LogOutIcon className="w-4 h-4" />
-                        Sign Out
-                      </button>
                     </div>
-                  </>
-                )}
+                  </button>
+
+                  {showUserMenu && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
+                        <div className="px-4 py-2 border-b border-gray-200">
+                          <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                          <p className="text-xs text-gray-500">{user?.email}</p>
+                        </div>
+
+                        <Link to="/dashboard" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                          <LayoutDashboardIcon className="w-4 h-4" />
+                          My Dashboard
+                        </Link>
+
+                        <Link to="/favorites" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                          <Heart className="w-4 h-4" />
+                          My Favorites
+                        </Link>
+
+                        {isAdmin && (
+                          <Link to="/admin" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                            <ShieldIcon className="w-4 h-4" />
+                            Admin Panel
+                          </Link>
+                        )}
+
+                        <button onClick={handleLogout} className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-gray-200 mt-2">
+                          <LogOutIcon className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                </div>
               </div>
             ) : (
               <Link to="/login" className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
@@ -218,66 +228,66 @@ export function Header() {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Mobile Navigation Menu */}
-      {showMobileMenu && (
-        <>
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={closeMobileMenu} />
-          <div className="fixed top-0 left-0 bottom-0 w-64 bg-white shadow-xl z-50 md:hidden overflow-y-auto">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <img src={logoBlue} alt="Hovallo" className="h-8 w-auto" />
-              <button onClick={closeMobileMenu} className="p-2 text-gray-500 hover:text-gray-700">
-                <XIcon className="w-6 h-6" />
-              </button>
-            </div>
-            <nav className="px-4 py-4 space-y-1">
-              <Link to="/properties" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Buy</Link>
-              <Link to="/properties" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Rent</Link>
-              <Link to="/post" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Sell</Link>
-              <Link to="/mortgage" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Home Loans</Link>
-              <Link to="/about" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Agent Finder</Link>
+        {/* Mobile Navigation Menu */}
+        {showMobileMenu && (
+          <>
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={closeMobileMenu} />
+            <div className="fixed top-0 left-0 bottom-0 w-64 bg-white shadow-xl z-50 md:hidden overflow-y-auto">
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                <img src={logoBlue} alt="Hovallo" className="h-8 w-auto" />
+                <button onClick={closeMobileMenu} className="p-2 text-gray-500 hover:text-gray-700">
+                  <XIcon className="w-6 h-6" />
+                </button>
+              </div>
+              <nav className="px-4 py-4 space-y-1">
+                <Link to="/properties" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Buy</Link>
+                <Link to="/properties" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Rent</Link>
+                <Link to="/post" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Sell</Link>
+                <Link to="/mortgage" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Home Loans</Link>
+                <Link to="/agents" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Agent Finder</Link>
 
-              <div className="border-t border-gray-200 my-2 pt-2"></div>
+                <div className="border-t border-gray-200 my-2 pt-2"></div>
 
-              <Link to="/dashboard" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Manage Rentals</Link>
-              <Link to="/faq" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Help</Link>
+                <Link to="/dashboard" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Manage Rentals</Link>
+                <Link to="/faq" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">Help</Link>
 
-              <div className="border-t border-gray-200 my-2 pt-2"></div>
+                <div className="border-t border-gray-200 my-2 pt-2"></div>
 
-              {isAuthenticated ? (
-                <>
-                  <div className="px-4 py-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                        {user?.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                        <p className="text-xs text-gray-500">{user?.email}</p>
+                {isAuthenticated ? (
+                  <>
+                    <div className="px-4 py-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                          {user?.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                          <p className="text-xs text-gray-500">{user?.email}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
-                    <LayoutDashboardIcon className="w-5 h-5" />
-                    My Dashboard
-                  </Link>
-                  <Link to="/favorites" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
-                    <Heart className="w-5 h-5" />
-                    My Favorites
-                  </Link>
-                  <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 text-base font-medium text-red-600 hover:bg-red-50 rounded-lg mt-2">
-                    <LogOutIcon className="w-5 h-5" />
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <Link to="/login" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-blue-600 hover:bg-blue-50 rounded-lg">Sign In</Link>
-              )}
-            </nav>
-          </div>
-        </>
-      )}
+                    <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                      <LayoutDashboardIcon className="w-5 h-5" />
+                      My Dashboard
+                    </Link>
+                    <Link to="/favorites" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                      <Heart className="w-5 h-5" />
+                      My Favorites
+                    </Link>
+                    <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 text-base font-medium text-red-600 hover:bg-red-50 rounded-lg mt-2">
+                      <LogOutIcon className="w-5 h-5" />
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <Link to="/login" onClick={closeMobileMenu} className="block px-4 py-3 text-base font-medium text-blue-600 hover:bg-blue-50 rounded-lg">Sign In</Link>
+                )}
+              </nav>
+            </div>
+          </>
+        )}
+      </div>
     </header>
   );
 }

@@ -8,6 +8,7 @@ export interface User {
   name: string;
   role: 'tenant' | 'landlord' | 'agent' | 'admin';
   isAdmin: boolean;
+  avatar_url?: string;
 }
 
 interface AuthContextType {
@@ -58,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: data?.name || email.split('@')[0],
           role: data?.role || 'tenant',
           isAdmin: data?.role === 'admin',
+          avatar_url: data?.avatar_url,
         });
       }
     } catch (e) {

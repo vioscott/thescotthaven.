@@ -6,6 +6,7 @@ export interface User {
   name: string;
   role: 'tenant' | 'landlord' | 'agent' | 'admin';
   isAdmin: boolean;
+  avatar_url?: string;
   createdAt: string;
 }
 
@@ -174,6 +175,25 @@ export const storage = {
       .from('users')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (error) return [];
+
+    return (data || []).map((u: any) => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      role: u.role,
+      isAdmin: u.role === 'admin',
+      createdAt: u.created_at
+    }));
+  },
+
+  getAgents: async (): Promise<User[]> => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('role', 'agent')
+      .order('name', { ascending: true });
 
     if (error) return [];
 
