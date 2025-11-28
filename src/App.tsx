@@ -17,7 +17,7 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AboutPage } from './pages/AboutPage';
 import { FAQPage } from './pages/FAQPage';
 import { AgentFinderPage } from './pages/AgentFinderPage';
-import { ProfileSettings } from './pages/ProfileSettings';
+import { ProfileSettingsPage } from './pages/ProfileSettingsPage';
 import { MessagesPage } from './pages/MessagesPage';
 import { PropertyAnalyticsPage } from './pages/PropertyAnalyticsPage';
 import { PortfolioAnalyticsPage } from './pages/PortfolioAnalyticsPage';
@@ -73,13 +73,18 @@ export function App() {
             <Route path="/agents" element={<AgentFinderPage />} />
             <Route path="/mortgage" element={<MortgagePage />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/favorites" element={
-              <ProtectedRoute allowedRoles={['tenant', 'landlord', 'agent', 'admin']}>
-                <FavoritesPage />
+            <Route path="/dashboard" element={
+              <ProtectedRoute allowedRoles={['landlord', 'agent', 'tenant']}>
+                <DashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute allowedRoles={['landlord', 'agent', 'tenant', 'admin']}>
+                <ProfileSettingsPage />
               </ProtectedRoute>
             } />
             <Route path="/post" element={
-              <ProtectedRoute allowedRoles={['tenant', 'landlord', 'agent', 'admin']}>
+              <ProtectedRoute allowedRoles={['landlord', 'agent', 'tenant']}>
                 <CreateListingPage />
               </ProtectedRoute>
             } />
@@ -91,7 +96,7 @@ export function App() {
             <Route path="/test-supabase" element={<SupabaseTestPage />} />
             <Route path="/profile" element={
               <ProtectedRoute allowedRoles={['tenant', 'landlord', 'agent', 'admin']}>
-                <ProfileSettings />
+                <ProfileSettingsPage />
               </ProtectedRoute>
             } />
             <Route path="/messages" element={

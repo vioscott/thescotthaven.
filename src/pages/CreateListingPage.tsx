@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UploadIcon, XIcon } from 'lucide-react';
+import { UploadIcon, XIcon, BriefcaseIcon, CheckCircleIcon } from 'lucide-react';
 import { storage } from '../utils/storage';
 import { useAuth } from '../contexts/AuthContext';
 
 export function CreateListingPage() {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, updateUserRole } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [upgrading, setUpgrading] = useState(false);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -25,15 +26,112 @@ export function CreateListingPage() {
         images: [] as string[]
     });
 
+    // Handle Tenant Restriction
+    if (user?.role === 'tenant') {
+        const handleUpgrade = async (role: 'landlord' | 'agent') => {
+            setUpgrading(true);
+            const result = await updateUserRole(role);
+            if (result.success) {
+                // Stay on page, now as new role
+            } else {
+                alert('Failed to upgrade account: ' + result.error);
+            }
+            setUpgrading(false);
+        };
+
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+                <div className="max-w-2xl w-full bg-white rounded-xl shadow-lg border border-gray-200 p-8 text-center">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <BriefcaseIcon className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-3">Professional Account Required</h2>
+                    <p className="text-gray-600 mb-8">
+                        To post property listings, you need to upgrade to a professional account. It's free! Choose the role that best fits you:
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        {/* Landlord Option */}
+                        <button
+                            onClick={() => handleUpgrade('landlord')}
+                            disabled={upgrading}
+                            className="flex flex-col items-center p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group text-left"
+                        >
+                            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <BriefcaseIcon className="w-6 h-6 text-green-600" />
+                            </div>
+                            <h3 className="font-bold text-gray-900 mb-2">Landlord</h3>
+                            <p className="text-sm text-gray-500 text-center">
+                                I own properties and want to list them for rent or sale.
+                            </p>
+                        </button>
+
+                        {/* Agent Option */}
+                        <button
+                            onClick={() => handleUpgrade('agent')}
+                            disabled={upgrading}
+                            className="flex flex-col items-center p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group text-left"
+                        >
+                            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <BriefcaseIcon className="w-6 h-6 text-purple-600" />
+                            </div>
+                            <h3 className="font-bold text-gray-900 mb-2">Real Estate Agent</h3>
+                            <p className="text-sm text-gray-500 text-center">
+                                I represent property owners and manage multiple listings.
+                            </p>
+                        </button>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-6 mb-8 text-left">
+                        <h3 className="font-medium text-gray-900 mb-3">Professional Benefits:</h3>
+                        <ul className="space-y-3">
+                            <li className="flex items-center gap-2 text-sm text-gray-600">
+                                <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                                Post unlimited property listings
+                            </li>
+                            <li className="flex items-center gap-2 text-sm text-gray-600">
+                                <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                                Access professional dashboard
+                            </li>
+                            <li className="flex items-center gap-2 text-sm text-gray-600">
+                                <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                                Manage inquiries and applications
+                            </li>
+                        </ul>
+                    </div>
+
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="text-gray-500 hover:text-gray-700 font-medium text-sm"
+                    >
+                        Return to Dashboard
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Mock image upload - in real app would upload to S3/Supabase
-        const newImage = `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80`;
-        setFormData(prev => ({ ...prev, images: [...prev.images, newImage] }));
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Check file size (limit to 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size too large. Please upload an image smaller than 5MB.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result as string;
+            setFormData(prev => ({ ...prev, images: [...prev.images, base64String] }));
+        };
+        reader.readAsDataURL(file);
     };
 
     const removeImage = (index: number) => {

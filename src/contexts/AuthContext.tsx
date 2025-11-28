@@ -9,6 +9,7 @@ export interface User {
   role: 'tenant' | 'landlord' | 'agent' | 'admin';
   isAdmin: boolean;
   avatar_url?: string;
+  phone?: string;
 }
 
 interface AuthContextType {
@@ -19,6 +20,8 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   fetchUserProfile: (userId: string, email: string) => Promise<void>;
+  updateUserRole: (role: 'landlord' | 'agent') => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (updates: Partial<User>) => Promise<{ success: boolean; error?: string }>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
@@ -61,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: data?.role || 'tenant',
           isAdmin: data?.role === 'admin',
           avatar_url: data?.avatar_url,
+          phone: data?.phone,
         });
       }
     } catch (e) {
@@ -72,26 +76,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initial session check and auth state listener
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await fetchUserProfile(session.user.id, session.user.email!);
-      } else {
-        setLoading(false);
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session?.user) {
+          if (mounted) await fetchUserProfile(session.user.id, session.user.email!);
+        } else {
+          if (mounted) {
+            setUser(null);
+            setLoading(false);
+          }
+        }
+
+        // Listen for changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+          if (!mounted) return;
+
+          if (session?.user) {
+            // Only fetch if we don't have the user or it's a different user
+            setUser(prev => {
+              if (prev?.id !== session.user.id) {
+                fetchUserProfile(session.user.id, session.user.email!);
+                return prev; // Keep current state until fetch updates it
+              }
+              return prev;
+            });
+          } else {
+            setUser(null);
+            setLoading(false);
+          }
+        });
+
+        return () => {
+          mounted = false;
+          subscription.unsubscribe();
+        };
+      } catch (err) {
+        console.error('Auth initialization error:', err);
+        if (mounted) setLoading(false);
       }
     };
-    checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        await fetchUserProfile(session.user.id, session.user.email!);
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    initializeAuth();
+  }, [fetchUserProfile]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -167,6 +198,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUserRole = async (role: 'landlord' | 'agent') => {
+    if (!user) return { success: false, error: 'No user logged in' };
+
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ role })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setUser(prev => prev ? { ...prev, role } : null);
+      return { success: true };
+    } catch (e: any) {
+      console.error('Error updating role:', e);
+      return { success: false, error: e.message || 'Failed to update role' };
+    }
+  };
+
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user) return { success: false, error: 'No user logged in' };
+
+    try {
+      // Filter out fields that shouldn't be updated directly or don't exist in DB
+      const { id, email, isAdmin, ...dbUpdates } = updates;
+
+      const { error } = await supabase
+        .from('users')
+        .update(dbUpdates)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setUser(prev => prev ? { ...prev, ...updates } : null);
+      return { success: true };
+    } catch (e: any) {
+      console.error('Error updating profile:', e);
+      return { success: false, error: e.message || 'Failed to update profile' };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -177,6 +250,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetPassword,
         signInWithGoogle,
         fetchUserProfile,
+        updateUserRole,
+        updateProfile,
         isAuthenticated: !!user,
         isAdmin: user?.isAdmin ?? false,
         loading,

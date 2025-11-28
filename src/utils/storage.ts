@@ -7,6 +7,7 @@ export interface User {
   role: 'tenant' | 'landlord' | 'agent' | 'admin';
   isAdmin: boolean;
   avatar_url?: string;
+  phone?: string;
   createdAt: string;
 }
 

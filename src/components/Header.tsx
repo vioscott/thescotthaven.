@@ -187,6 +187,11 @@ export function Header() {
                           My Dashboard
                         </Link>
 
+                        <Link to="/profile" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                          <UserIcon className="w-4 h-4" />
+                          Profile Settings
+                        </Link>
+
                         <Link to="/favorites" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                           <Heart className="w-4 h-4" />
                           My Favorites
