@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../utils/supabase';
 
 // User type definition
@@ -31,7 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Fetch or create user profile (including OAuth users)
-  const fetchUserProfile = async (userId: string, email: string) => {
+  // Memoized to prevent recreation on every render (fixes useEffect dependency issues)
+  const fetchUserProfile = useCallback(async (userId: string, email: string) => {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -67,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Initial session check and auth state listener
   useEffect(() => {
@@ -94,12 +95,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      if (data.user) {
-        await fetchUserProfile(data.user.id, data.user.email!);
-      }
+      // Don't fetch profile here - let onAuthStateChange handle it to avoid race conditions
+      // This prevents duplicate profile fetches and state flickering
 
       return { success: true };
     } catch (e: any) {
@@ -145,7 +145,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
       if (error) throw error;
       return { success: true };
     } catch (e: any) {

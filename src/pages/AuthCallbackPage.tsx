@@ -42,7 +42,9 @@ export function AuthCallbackPage() {
         };
 
         handleAuthCallback();
-    }, [navigate, fetchUserProfile]);
+        // fetchUserProfile is now memoized with useCallback, safe to omit from dependencies
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [navigate]);
 
     if (error) {
         return (

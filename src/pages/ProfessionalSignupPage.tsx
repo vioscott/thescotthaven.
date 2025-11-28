@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { GoogleOAuthButton } from '../components/GoogleOAuthButton';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -145,33 +145,29 @@ export function ProfessionalSignupPage() {
                             </div>
                         )}
 
-                        {/* Professional Type Selection */}
+                        {/* Professional Type Selection - Dropdown */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
                                 I am a... *
                             </label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <select
+                                required
+                                value={formData.professionalType}
+                                onChange={(e) => setFormData({ ...formData, professionalType: e.target.value as ProfessionalType })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                            >
+                                <option value="">Select your profession...</option>
                                 {professionalOptions.map((option) => (
-                                    <label
-                                        key={option.label}
-                                        className={`relative flex flex-col p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.professionalType === option.value
-                                            ? 'border-blue-500 bg-blue-50'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                            }`}
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="professionalType"
-                                            value={option.value}
-                                            checked={formData.professionalType === option.value}
-                                            onChange={(e) => setFormData({ ...formData, professionalType: e.target.value as ProfessionalType })}
-                                            className="sr-only"
-                                        />
-                                        <span className="font-medium text-gray-900 text-sm">{option.label}</span>
-                                        <span className="text-xs text-gray-500 mt-1">{option.description}</span>
-                                    </label>
+                                    <option key={option.label} value={option.value}>
+                                        {option.label}
+                                    </option>
                                 ))}
-                            </div>
+                            </select>
+                            {formData.professionalType && (
+                                <p className="mt-2 text-xs text-gray-500">
+                                    {professionalOptions.find(opt => opt.value === formData.professionalType)?.description}
+                                </p>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

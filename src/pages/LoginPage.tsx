@@ -17,23 +17,16 @@ export function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try {
-      const result = await login(email, password);
-      if (result.success) {
-        navigate('/dashboard');
-      } else {
-        // Ensure we capture any error message from the auth call
-        const errMsg = result.error || 'Login failed. Please check your credentials.';
-        setError(errMsg);
-        console.error('Login error:', errMsg);
-      }
-    } catch (e: any) {
-      const errMsg = e.message || 'An unexpected error occurred during login.';
-      setError(errMsg);
-      console.error('Unexpected login exception:', errMsg);
-    } finally {
-      setLoading(false);
+
+    const result = await login(email, password);
+
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setError(result.error || 'Login failed. Please check your credentials.');
     }
+
+    setLoading(false);
   };
   return <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
     <div className="max-w-md w-full">
