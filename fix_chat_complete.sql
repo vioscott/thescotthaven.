@@ -1,11 +1,24 @@
 -- ============================================
--- REAL-TIME CHAT SETUP
+-- COMPLETE CHAT FIX & SETUP
+-- Run this script to fully resolve "Unknown User" and setup chat
 -- ============================================
 
--- Enable UUID extension if not already enabled
+-- 1. Enable UUID extension (Required for ID generation)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. Create conversations table
+-- 2. Fix Public Users RLS (The "Unknown User" Fix)
+-- Allow authenticated users to view basic profile info of others
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can view all profiles" ON public.users;
+
+CREATE POLICY "Users can view all profiles" ON public.users
+  FOR SELECT USING (
+    auth.role() = 'authenticated'
+  );
+
+-- 3. Setup Chat Tables (Safe to run if tables exist)
+
+-- Conversations Table
 CREATE TABLE IF NOT EXISTS public.conversations (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   participant1_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
@@ -16,7 +29,7 @@ CREATE TABLE IF NOT EXISTS public.conversations (
   UNIQUE(participant1_id, participant2_id, property_id)
 );
 
--- 2. Create messages table
+-- Messages Table
 CREATE TABLE IF NOT EXISTS public.messages (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   conversation_id UUID NOT NULL REFERENCES public.conversations(id) ON DELETE CASCADE,
@@ -26,29 +39,26 @@ CREATE TABLE IF NOT EXISTS public.messages (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 3. Enable RLS
+-- 4. Enable RLS on Chat Tables
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
--- 4. Create RLS Policies for conversations
+-- 5. Chat RLS Policies
 
--- Users can view conversations they are part of
+-- Conversations
 DROP POLICY IF EXISTS "Users can view their own conversations" ON public.conversations;
 CREATE POLICY "Users can view their own conversations" ON public.conversations
   FOR SELECT USING (
     auth.uid() = participant1_id OR auth.uid() = participant2_id
   );
 
--- Users can create conversations if they are one of the participants
 DROP POLICY IF EXISTS "Users can create conversations" ON public.conversations;
 CREATE POLICY "Users can create conversations" ON public.conversations
   FOR INSERT WITH CHECK (
     auth.uid() = participant1_id OR auth.uid() = participant2_id
   );
 
--- 5. Create RLS Policies for messages
-
--- Users can view messages in conversations they belong to
+-- Messages
 DROP POLICY IF EXISTS "Users can view messages in their conversations" ON public.messages;
 CREATE POLICY "Users can view messages in their conversations" ON public.messages
   FOR SELECT USING (
@@ -59,7 +69,6 @@ CREATE POLICY "Users can view messages in their conversations" ON public.message
     )
   );
 
--- Users can insert messages in conversations they belong to
 DROP POLICY IF EXISTS "Users can send messages in their conversations" ON public.messages;
 CREATE POLICY "Users can send messages in their conversations" ON public.messages
   FOR INSERT WITH CHECK (
@@ -71,7 +80,7 @@ CREATE POLICY "Users can send messages in their conversations" ON public.message
     )
   );
 
--- 6. Create indexes for performance
+-- 6. Indexes
 CREATE INDEX IF NOT EXISTS conversations_participants_idx ON public.conversations(participant1_id, participant2_id);
 CREATE INDEX IF NOT EXISTS messages_conversation_id_idx ON public.messages(conversation_id);
 CREATE INDEX IF NOT EXISTS messages_created_at_idx ON public.messages(created_at);

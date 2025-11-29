@@ -276,6 +276,10 @@ export function Header() {
                       <LayoutDashboardIcon className="w-5 h-5" />
                       My Dashboard
                     </Link>
+                    <Link to="/messages" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+                      <MessageSquare className="w-5 h-5" />
+                      Messages
+                    </Link>
                     <Link to="/favorites" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
                       <Heart className="w-5 h-5" />
                       My Favorites

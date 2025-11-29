@@ -100,7 +100,7 @@ export function PropertyAnalyticsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-gray-50 py-4 md:py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-8">
@@ -111,7 +111,7 @@ export function PropertyAnalyticsPage() {
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to Dashboard
                     </Link>
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">
                                 {property.title}
@@ -120,7 +120,7 @@ export function PropertyAnalyticsPage() {
                                 {property.city}, {property.state} • {property.type}
                             </p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-left md:text-right">
                             <p className="text-sm text-gray-600">Listed on</p>
                             <p className="text-lg font-semibold text-gray-900">
                                 {new Date(property.createdAt).toLocaleDateString('en-US', {

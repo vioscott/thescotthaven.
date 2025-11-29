@@ -4,6 +4,7 @@ import { BedIcon, BathIcon, SquareIcon, ArrowLeftIcon, ShareIcon, HeartIcon, Mes
 import { storage, StoredProperty } from '../utils/storage';
 import { useAuth } from '../contexts/AuthContext';
 import { ChatService } from '../utils/ChatService';
+import { trackPropertyView } from '../utils/analytics';
 
 export function ListingDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -21,6 +22,11 @@ export function ListingDetailPage() {
                 const found = await storage.getProperty(id);
                 if (found) {
                     setProperty(found);
+                    // Track view
+                    trackPropertyView(id, {
+                        city: 'Unknown', // In a real app, we'd get this from IP geolocation
+                        state: 'Unknown'
+                    });
                 }
             }
         };
@@ -90,9 +96,12 @@ export function ListingDetailPage() {
 
                         {/* Details */}
                         <div className="bg-white rounded-xl p-6 shadow-sm">
-                            <div className="flex items-start justify-between mb-4">
+                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
                                 <div>
-                                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
+                                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
+                                    <p className="text-2xl font-bold text-blue-600 mb-4">
+                                        ₦{property.price.toLocaleString()}
+                                    </p>
                                     <div className="flex items-center text-gray-600">
                                         <BedIcon className="w-6 h-6" />
                                     </div>
