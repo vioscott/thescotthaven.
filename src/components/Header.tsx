@@ -24,7 +24,7 @@ export function Header() {
     logout();
     setShowUserMenu(false);
     setShowMobileMenu(false);
-    navigate('/');
+    navigate('/login');
   };
   const closeMobileMenu = () => {
     setShowMobileMenu(false);
