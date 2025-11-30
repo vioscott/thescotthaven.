@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { BedIcon, BathIcon, SquareIcon, MapPinIcon } from 'lucide-react';
 import { StoredProperty } from '../utils/storage';
 import { FavoriteButton } from './FavoriteButton';
+import { VerifiedBadge } from './VerifiedBadge';
 
 interface PropertyCardProps {
   property: StoredProperty;
@@ -27,8 +28,15 @@ export function PropertyCard({ property }: PropertyCardProps) {
           ₦{property.price.toLocaleString()}
         </div>
         {/* Property Type Badge */}
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-gray-700 px-3 py-1 rounded-lg text-xs font-medium capitalize shadow-md">
-          {property.type}
+        <div className="absolute top-4 left-4 flex gap-2">
+          <div className="bg-white/90 backdrop-blur-sm text-gray-700 px-3 py-1 rounded-lg text-xs font-medium capitalize shadow-md">
+            {property.type}
+          </div>
+          {property.ownership_verified && (
+            <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-md flex items-center justify-center">
+              <VerifiedBadge size="small" verificationType="property" />
+            </div>
+          )}
         </div>
         {/* Favorite Button */}
         <div className="absolute bottom-4 right-4" onClick={(e) => e.preventDefault()}>

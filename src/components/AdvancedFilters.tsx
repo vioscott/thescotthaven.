@@ -12,6 +12,8 @@ interface AdvancedFiltersProps {
     onBedroomsChange: (value: string) => void;
     bathrooms: string;
     onBathroomsChange: (value: string) => void;
+    verifiedOnly: boolean;
+    onVerifiedOnlyChange: (value: boolean) => void;
     className?: string;
 }
 
@@ -26,6 +28,8 @@ export function AdvancedFilters({
     onBedroomsChange,
     bathrooms,
     onBathroomsChange,
+    verifiedOnly,
+    onVerifiedOnlyChange,
     className = ''
 }: AdvancedFiltersProps) {
     const [showAdvanced, setShowAdvanced] = useState(false);
@@ -36,10 +40,11 @@ export function AdvancedFilters({
         onPriceRangeChange('all');
         onBedroomsChange('all');
         onBathroomsChange('all');
+        onVerifiedOnlyChange(false);
     };
 
     const hasActiveFilters = searchTerm || propertyType !== 'all' || priceRange !== 'all' ||
-        bedrooms !== 'all' || bathrooms !== 'all';
+        bedrooms !== 'all' || bathrooms !== 'all' || verifiedOnly;
 
     return (
         <div className={`bg-white rounded-xl shadow-lg p-6 ${className}`}>
@@ -147,6 +152,19 @@ export function AdvancedFilters({
                                 <option value="4">4+</option>
                             </select>
                         </div>
+                    </div>
+
+                    {/* Verified Only Toggle */}
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={verifiedOnly}
+                                onChange={(e) => onVerifiedOnlyChange(e.target.checked)}
+                                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Show Verified Properties Only</span>
+                        </label>
                     </div>
                 </div>
             )}

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../utils/supabase';
+import { ChatService } from '../utils/ChatService';
 
 // User type definition
 export interface User {
@@ -10,6 +11,8 @@ export interface User {
   isAdmin: boolean;
   avatar_url?: string;
   phone?: string;
+  identity_verified?: boolean;
+  business_verified?: boolean;
 }
 
 interface AuthContextType {
@@ -22,9 +25,11 @@ interface AuthContextType {
   fetchUserProfile: (userId: string, email: string) => Promise<void>;
   updateUserRole: (role: 'landlord' | 'agent') => Promise<{ success: boolean; error?: string }>;
   updateProfile: (updates: Partial<User>) => Promise<{ success: boolean; error?: string }>;
+  createProfile: (name: string, role: 'tenant' | 'landlord' | 'agent') => Promise<{ success: boolean; error?: string }>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
+  needsProfile: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +37,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [needsProfile, setNeedsProfile] = useState(false);
 
   // Fetch or create user profile (including OAuth users)
   // Memoized to prevent recreation on every render (fixes useEffect dependency issues)
@@ -44,27 +50,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error && (error as any).code === 'PGRST116') {
-        // No profile – create a default one using OAuth info
-        const { error: insertError } = await supabase.from('users').insert([
-          {
-            id: userId,
-            email,
-            name: email.split('@')[0],
-            role: 'tenant',
-            created_at: new Date().toISOString(),
-          },
-        ]);
-        if (insertError) console.error('Error creating OAuth profile:', insertError);
+        // No profile – flag as needing profile creation
+        setNeedsProfile(true);
+        // Set a temporary user object so we're authenticated but need profile
         setUser({ id: userId, email, name: email.split('@')[0], role: 'tenant', isAdmin: false });
       } else {
+        setNeedsProfile(false);
         setUser({
           id: userId,
           email,
           name: data?.name || email.split('@')[0],
           role: data?.role || 'tenant',
-          isAdmin: data?.role === 'admin',
-          avatar_url: data?.avatar_url,
-          phone: data?.phone,
+          isAdmin: data.role === 'admin',
+          avatar_url: data.avatar_url,
+          phone: data.phone,
+          identity_verified: data.identity_verified,
+          business_verified: data.business_verified
         });
       }
     } catch (e) {
@@ -132,6 +133,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Don't fetch profile here - let onAuthStateChange handle it to avoid race conditions
       // This prevents duplicate profile fetches and state flickering
 
+      // Send welcome message to most recent conversation
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const conversations = await ChatService.getConversations(user.id);
+          if (conversations.length > 0) {
+            await ChatService.sendSystemMessage(conversations[0].id, "Welcome back! 👋", user.id);
+          }
+        }
+      } catch (err) {
+        console.error('Error sending welcome message:', err);
+      }
+
       return { success: true };
     } catch (e: any) {
       console.error('Login error:', e);
@@ -169,6 +183,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    try {
+      if (user) {
+        const conversations = await ChatService.getConversations(user.id);
+        if (conversations.length > 0) {
+          await ChatService.sendSystemMessage(conversations[0].id, "See you soon! 👋", user.id);
+        }
+      }
+    } catch (err) {
+      console.error('Error sending goodbye message:', err);
+    }
+
     await supabase.auth.signOut();
     setUser(null);
   };
@@ -240,6 +265,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const createProfile = async (name: string, role: 'tenant' | 'landlord' | 'agent') => {
+    if (!user) return { success: false, error: 'No user logged in' };
+
+    try {
+      const { error } = await supabase.from('users').insert([
+        {
+          id: user.id,
+          email: user.email,
+          name,
+          role,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+
+      if (error) throw error;
+
+      // Update local state
+      setUser(prev => prev ? { ...prev, name, role } : null);
+      setNeedsProfile(false);
+
+      // Send welcome message
+      try {
+        const conversations = await ChatService.getConversations(user.id);
+        if (conversations.length > 0) {
+          await ChatService.sendSystemMessage(conversations[0].id, "Welcome back! 👋", user.id);
+        }
+      } catch (err) {
+        console.error('Error sending welcome message:', err);
+      }
+
+      return { success: true };
+    } catch (e: any) {
+      console.error('Error creating profile:', e);
+      return { success: false, error: e.message || 'Failed to create profile' };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -252,9 +314,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         fetchUserProfile,
         updateUserRole,
         updateProfile,
+        createProfile,
         isAuthenticated: !!user,
         isAdmin: user?.isAdmin ?? false,
         loading,
+        needsProfile,
       }}
     >
       {children}

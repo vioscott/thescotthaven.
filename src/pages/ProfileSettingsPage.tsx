@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, Shield, Camera } from 'lucide-react';
+import { User, Mail, Shield, Camera, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { VerifiedBadge } from '../components/VerifiedBadge';
 
 export function ProfileSettingsPage() {
     const { user, updateProfile } = useAuth();
@@ -104,7 +106,11 @@ export function ProfileSettingsPage() {
                                 )}
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
+                                    {user.identity_verified && <VerifiedBadge size="medium" verificationType="identity" />}
+                                    {user.business_verified && <VerifiedBadge size="medium" verificationType="business" />}
+                                </div>
                                 <p className="text-gray-500 capitalize">{user.role}</p>
                             </div>
                         </div>
@@ -172,7 +178,11 @@ export function ProfileSettingsPage() {
                                         type="button"
                                         onClick={() => {
                                             setIsEditing(false);
-                                            setFormData({ name: user.name || '', phone: user.phone || '' });
+                                            setFormData({
+                                                name: user.name || '',
+                                                phone: user.phone || '',
+                                                avatar_url: user.avatar_url || ''
+                                            });
                                         }}
                                         className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
                                     >
@@ -196,6 +206,34 @@ export function ProfileSettingsPage() {
                                 <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
                                     Change Password
                                 </button>
+
+                                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                    <div className="flex items-center gap-3">
+                                        <Shield className="w-5 h-5 text-blue-600" />
+                                        <div>
+                                            <h4 className="font-medium text-blue-900">Verification Status</h4>
+                                            <p className="text-sm text-blue-700">
+                                                {user.identity_verified
+                                                    ? 'Your identity is verified'
+                                                    : 'Verify your identity to build trust'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {!user.identity_verified && (
+                                        <Link
+                                            to="/verify"
+                                            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                                        >
+                                            Get Verified
+                                        </Link>
+                                    )}
+                                    {user.identity_verified && (
+                                        <span className="flex items-center gap-1 text-green-600 font-medium text-sm">
+                                            <CheckCircle className="w-4 h-4" />
+                                            Verified
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

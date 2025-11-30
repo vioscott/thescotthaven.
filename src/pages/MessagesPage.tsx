@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { ChatService, Conversation, Message } from '../utils/ChatService';
-import { Send, User as UserIcon, MessageSquare, ArrowLeft, Paperclip, Check, CheckCheck, Archive, ArchiveRestore, X } from 'lucide-react';
+import { Send, User as UserIcon, MessageSquare, ArrowLeft, Paperclip, Check, CheckCheck, X } from 'lucide-react';
 import { FileAttachment } from '../components/FileAttachment';
 import { uploadChatFile, validateFile } from '../utils/fileUpload';
 
@@ -13,9 +13,9 @@ export function MessagesPage() {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
-    const [showArchived, setShowArchived] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
+    const [hasMore, setHasMore] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const subscriptionRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -27,10 +27,11 @@ export function MessagesPage() {
         }
     }, [user]);
 
-    // Scroll to bottom when messages change
+    // Scroll to bottom when messages change only if not loading more
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        // Only scroll to bottom if we are near the bottom or it's the initial load
+        // For now, just scroll on initial load (handled in loadMessages) and new messages (subscription)
+    }, []);
 
     // Subscribe to real-time updates when a conversation is selected
     useEffect(() => {
@@ -60,7 +61,7 @@ export function MessagesPage() {
     const loadConversations = async () => {
         if (!user) return;
         try {
-            const data = await ChatService.getConversations(user.id, showArchived);
+            const data = await ChatService.getConversations(user.id, true);
             setConversations(data);
         } catch (error) {
             console.error('Error loading conversations:', error);
@@ -69,14 +70,22 @@ export function MessagesPage() {
         }
     };
 
-    const loadMessages = async (conversationId: string) => {
+    const loadMessages = async (conversationId: string, offset = 0) => {
         try {
-            const data = await ChatService.getMessages(conversationId);
-            setMessages(data);
-            // Mark as read
-            if (user) {
+            const data = await ChatService.getMessages(conversationId, 50, offset);
+
+            if (offset === 0) {
+                setMessages(data);
+                scrollToBottom();
+            } else {
+                setMessages(prev => [...data, ...prev]);
+            }
+
+            setHasMore(data.length === 50);
+
+            // Mark as read only if loading initial messages
+            if (user && offset === 0) {
                 await ChatService.markAsRead(conversationId, user.id);
-                // Refresh conversations to update read status
                 loadConversations();
             }
         } catch (error) {
@@ -133,24 +142,7 @@ export function MessagesPage() {
         }
     };
 
-    const handleArchive = async (conversationId: string) => {
-        try {
-            await ChatService.archiveConversation(conversationId);
-            setSelectedConversation(null);
-            loadConversations();
-        } catch (error) {
-            console.error('Error archiving conversation:', error);
-        }
-    };
 
-    const handleUnarchive = async (conversationId: string) => {
-        try {
-            await ChatService.unarchiveConversation(conversationId);
-            loadConversations();
-        } catch (error) {
-            console.error('Error unarchiving conversation:', error);
-        }
-    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -165,18 +157,8 @@ export function MessagesPage() {
 
                     {/* Conversations List Sidebar */}
                     <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 flex-col border-r border-gray-200`}>
-                        <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                        <div className="p-4 border-b border-gray-200 bg-gray-50">
                             <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
-                            <button
-                                onClick={() => {
-                                    setShowArchived(!showArchived);
-                                    loadConversations();
-                                }}
-                                className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                            >
-                                {showArchived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-                                {showArchived ? 'Hide Archived' : 'Show Archived'}
-                            </button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto">
@@ -249,18 +231,32 @@ export function MessagesPage() {
                                         <h3 className="font-semibold text-gray-900">{selectedConversation.other_user?.name}</h3>
                                         <p className="text-xs text-gray-500">Online</p>
                                     </div>
-                                    <button
-                                        onClick={() => handleArchive(selectedConversation.id)}
-                                        className="ml-auto p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-                                        title="Archive conversation"
-                                    >
-                                        <Archive className="w-5 h-5" />
-                                    </button>
                                 </div>
 
                                 {/* Messages List */}
                                 <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                                    {hasMore && (
+                                        <div className="flex justify-center py-2">
+                                            <button
+                                                onClick={() => loadMessages(selectedConversation.id, messages.length)}
+                                                className="text-xs text-blue-600 hover:text-blue-700 font-medium bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors"
+                                            >
+                                                Load More
+                                            </button>
+                                        </div>
+                                    )}
+
                                     {messages.map((msg) => {
+                                        if (msg.system_message) {
+                                            return (
+                                                <div key={msg.id} className="flex justify-center my-4">
+                                                    <div className="bg-gray-200 px-4 py-1.5 rounded-full">
+                                                        <p className="text-xs text-gray-600 font-medium">{msg.content}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+
                                         const isMe = msg.sender_id === user.id;
                                         return (
                                             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>

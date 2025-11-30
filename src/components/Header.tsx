@@ -6,6 +6,7 @@ import logoBlue from '../imgs/logo-blue.png';
 import logoWhite from '../imgs/logo-white.png';
 
 import { NavigationMenu } from './NavigationMenu';
+import { NotificationBadge } from './NotificationBadge';
 
 export function Header() {
   const location = useLocation();
@@ -161,7 +162,7 @@ export function Header() {
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
                 <Link to="/messages" className="p-2 text-gray-600 hover:text-blue-600 transition-colors relative" title="Messages">
-                  <MessageSquare className="w-5 h-5" />
+                  <NotificationBadge />
                 </Link>
                 <div className="relative">
                   <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
@@ -267,7 +268,7 @@ export function Header() {
                       My Dashboard
                     </Link>
                     <Link to="/messages" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
-                      <MessageSquare className="w-5 h-5" />
+                      <NotificationBadge />
                       Messages
                     </Link>
                     <Link to="/profile" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg">

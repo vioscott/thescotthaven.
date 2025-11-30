@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { storage, User } from '../utils/storage';
 import { Search, Mail, MapPin, User as UserIcon, Building } from 'lucide-react';
+import { VerifiedBadge } from '../components/VerifiedBadge';
 
 export function AgentFinderPage() {
     const [agents, setAgents] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [verifiedOnly, setVerifiedOnly] = useState(false);
 
     useEffect(() => {
         loadAgents();
@@ -22,10 +24,16 @@ export function AgentFinderPage() {
         }
     };
 
-    const filteredAgents = agents.filter(agent =>
-        agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        agent.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredAgents = agents.filter(agent => {
+        const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            agent.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+        if (verifiedOnly) {
+            return matchesSearch && (agent.identity_verified || agent.business_verified);
+        }
+
+        return matchesSearch;
+    });
 
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -39,7 +47,7 @@ export function AgentFinderPage() {
 
                 {/* Search Bar */}
                 <div className="max-w-2xl mx-auto mb-12">
-                    <div className="relative">
+                    <div className="relative mb-4">
                         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <input
                             type="text"
@@ -48,6 +56,18 @@ export function AgentFinderPage() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-lg"
                         />
+                    </div>
+
+                    <div className="flex justify-center">
+                        <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
+                            <input
+                                type="checkbox"
+                                checked={verifiedOnly}
+                                onChange={(e) => setVerifiedOnly(e.target.checked)}
+                                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                            />
+                            <span className="text-gray-700 font-medium">Show Verified Agents Only</span>
+                        </label>
                     </div>
                 </div>
 
@@ -69,7 +89,11 @@ export function AgentFinderPage() {
                                             )}
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold text-gray-900">{agent.name}</h3>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-xl font-bold text-gray-900">{agent.name}</h3>
+                                                {agent.identity_verified && <VerifiedBadge size="small" verificationType="identity" />}
+                                                {agent.business_verified && <VerifiedBadge size="small" verificationType="business" />}
+                                            </div>
                                             <div className="flex items-center text-blue-600 text-sm font-medium">
                                                 <Building className="w-4 h-4 mr-1" />
                                                 <span>Licensed Agent</span>

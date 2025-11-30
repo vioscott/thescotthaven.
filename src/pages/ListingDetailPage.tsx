@@ -5,6 +5,7 @@ import { storage, StoredProperty } from '../utils/storage';
 import { useAuth } from '../contexts/AuthContext';
 import { ChatService } from '../utils/ChatService';
 import { trackPropertyView } from '../utils/analytics';
+import { VerifiedBadge } from '../components/VerifiedBadge';
 
 export function ListingDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -98,7 +99,10 @@ export function ListingDetailPage() {
                         <div className="bg-white rounded-xl p-6 shadow-sm">
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
                                 <div>
-                                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{property.title}</h1>
+                                        {property.ownership_verified && <VerifiedBadge size="large" verificationType="property" />}
+                                    </div>
                                     <p className="text-2xl font-bold text-blue-600 mb-4">
                                         ₦{property.price.toLocaleString()}
                                     </p>

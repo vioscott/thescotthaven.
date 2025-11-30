@@ -16,6 +16,7 @@ export function SearchPage() {
     const [priceRange, setPriceRange] = useState<string>('all');
     const [bedrooms, setBedrooms] = useState<string>('all');
     const [bathrooms, setBathrooms] = useState<string>('all');
+    const [verifiedOnly, setVerifiedOnly] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchProperties = async () => {
@@ -67,8 +68,13 @@ export function SearchPage() {
             filtered = filtered.filter(p => p.bathrooms >= minBathrooms);
         }
 
+        // Verified Only filter
+        if (verifiedOnly) {
+            filtered = filtered.filter(p => p.ownership_verified);
+        }
+
         setFilteredProperties(filtered);
-    }, [searchTerm, propertyType, priceRange, bedrooms, bathrooms, properties]);
+    }, [searchTerm, propertyType, priceRange, bedrooms, bathrooms, verifiedOnly, properties]);
 
     return (
         <div className="min-h-screen bg-gray-50 pt-8 pb-12">
@@ -86,6 +92,8 @@ export function SearchPage() {
                         onBedroomsChange={setBedrooms}
                         bathrooms={bathrooms}
                         onBathroomsChange={setBathrooms}
+                        verifiedOnly={verifiedOnly}
+                        onVerifiedOnlyChange={setVerifiedOnly}
                     />
                 </div>
 
@@ -111,6 +119,7 @@ export function SearchPage() {
                                 setPriceRange('all');
                                 setBedrooms('all');
                                 setBathrooms('all');
+                                setVerifiedOnly(false);
                             }}
                             className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
                         >

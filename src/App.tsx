@@ -25,6 +25,7 @@ import { FavoritesPage } from './pages/FavoritesPage';
 import { EditListingPage } from './pages/EditListingPage';
 import { MortgagePage } from './pages/MortgagePage';
 import { SupabaseTestPage } from './pages/SupabaseTestPage';
+import { VerificationPage } from './pages/VerificationPage';
 
 
 
@@ -109,6 +110,11 @@ function AppContent() {
         <Route path="/favorites" element={
           <ProtectedRoute allowedRoles={['tenant', 'landlord', 'agent', 'admin']}>
             <FavoritesPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/verify" element={
+          <ProtectedRoute allowedRoles={['tenant', 'landlord', 'agent', 'admin']}>
+            <VerificationPage />
           </ProtectedRoute>
         } />
       </Routes>

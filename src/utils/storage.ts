@@ -9,6 +9,8 @@ export interface User {
   avatar_url?: string;
   phone?: string;
   createdAt: string;
+  identity_verified?: boolean;
+  business_verified?: boolean;
 }
 
 export interface StoredProperty {
@@ -29,6 +31,7 @@ export interface StoredProperty {
   images: string[];
   status: 'published' | 'draft' | 'archived';
   createdAt: string;
+  ownership_verified?: boolean;
 }
 
 export interface Inquiry {
@@ -185,7 +188,9 @@ export const storage = {
       name: u.name,
       role: u.role,
       isAdmin: u.role === 'admin',
-      createdAt: u.created_at
+      createdAt: u.created_at,
+      identity_verified: u.identity_verified,
+      business_verified: u.business_verified
     }));
   },
 
@@ -204,7 +209,9 @@ export const storage = {
       name: u.name,
       role: u.role,
       isAdmin: u.role === 'admin',
-      createdAt: u.created_at
+      createdAt: u.created_at,
+      identity_verified: u.identity_verified,
+      business_verified: u.business_verified
     }));
   },
 
@@ -363,7 +370,8 @@ function mapPropertyFromDB(dbProp: any): StoredProperty {
     description: dbProp.description,
     images: dbProp.images || [],
     status: dbProp.status,
-    createdAt: dbProp.created_at
+    createdAt: dbProp.created_at,
+    ownership_verified: dbProp.ownership_verified
   };
 }
 

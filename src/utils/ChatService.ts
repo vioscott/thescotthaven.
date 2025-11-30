@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { User } from './storage';
 
 export interface Message {
     id: string;
@@ -11,7 +10,15 @@ export interface Message {
     attachment_url?: string;
     attachment_type?: 'image' | 'document';
     attachment_name?: string;
+    system_message?: boolean;
     created_at: string;
+}
+
+export interface Notification {
+    id: string;
+    user_id: string;
+    unread_count: number;
+    updated_at: string;
 }
 
 export interface Conversation {
@@ -74,16 +81,18 @@ export const ChatService = {
         return processedConversations;
     },
 
-    // Get messages for a specific conversation
-    async getMessages(conversationId: string): Promise<Message[]> {
+    // Get messages for a specific conversation with pagination
+    async getMessages(conversationId: string, limit: number = 50, offset: number = 0): Promise<Message[]> {
         const { data, error } = await supabase
             .from('messages')
             .select('*')
             .eq('conversation_id', conversationId)
-            .order('created_at', { ascending: true });
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
 
         if (error) throw error;
-        return data;
+        // Reverse to show oldest first
+        return data.reverse();
     },
 
     // Send a new message
@@ -201,6 +210,85 @@ export const ChatService = {
             .from('conversations')
             .update({ archived: false })
             .eq('id', conversationId);
+
+        if (error) throw error;
+    },
+
+    // Send a system message (for welcome/goodbye)
+    async sendSystemMessage(
+        conversationId: string,
+        content: string,
+        senderId: string = '00000000-0000-0000-0000-000000000000'
+    ): Promise<Message> {
+        const { data, error } = await supabase
+            .from('messages')
+            .insert({
+                conversation_id: conversationId,
+                sender_id: senderId,
+                content,
+                system_message: true,
+                read: true // System messages are always marked as read
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        // Update conversation timestamp
+        await supabase
+            .from('conversations')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', conversationId);
+
+        return data;
+    },
+
+    // Get unread message count for a user
+    async getUnreadCount(userId: string): Promise<number> {
+        const { data, error } = await supabase
+            .from('notifications')
+            .select('unread_count')
+            .eq('user_id', userId)
+            .single();
+
+        if (error) {
+            // If no notification record exists, return 0
+            if (error.code === 'PGRST116') return 0;
+            throw error;
+        }
+
+        return data?.unread_count || 0;
+    },
+
+    // Subscribe to notification updates
+    subscribeToNotifications(userId: string, callback: (count: number) => void) {
+        return supabase
+            .channel(`notifications:${userId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${userId}`
+                },
+                (payload) => {
+                    const notification = payload.new as Notification;
+                    callback(notification?.unread_count || 0);
+                }
+            )
+            .subscribe();
+    },
+
+    // Reset notification count (when user opens messages page)
+    async resetNotificationCount(userId: string): Promise<void> {
+        const { error } = await supabase
+            .from('notifications')
+            .upsert({
+                user_id: userId,
+                unread_count: 0,
+                updated_at: new Date().toISOString()
+            });
 
         if (error) throw error;
     }
